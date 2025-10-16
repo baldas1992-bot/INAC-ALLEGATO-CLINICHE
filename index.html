@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INAC - Strutture Toscana</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;color:#111}
+.header{border-bottom:1px solid #e5e7eb;padding:12px 16px}
+.header h1{margin:0;color:#0a7a0a;font-size:18px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;align-items:center}
+.input,.btn{padding:8px 10px;border:1px solid #d1d5db;border-radius:8px}
+.btn{background:#0a7a0a;color:#fff;border-color:#0a7a0a;cursor:pointer}
+.table-wrap{padding:10px 16px}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid #eee;padding:8px 6px;vertical-align:top;font-size:14px}
+thead th{background:#0a7a0a;color:#fff;cursor:pointer;position:sticky;top:0}
+.badge{display:inline-block;margin-left:8px;padding:2px 6px;border-radius:6px;background:#eef2ff;font-size:12px;color:#3730a3}
+.count{margin-left:auto;color:#555;font-size:12px}
+.note{font-size:12px;color:#6b7280}
+.chip{display:inline-flex;gap:6px;align-items:center;border:1px solid #e5e7eb;border-radius:16px;padding:3px 8px;margin-right:6px;margin-top:6px}
+.err{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;padding:8px 10px;border-radius:8px;margin:8px 16px;display:none}
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>INAC - Strutture Toscana</h1>
+  <p class="note">ISTITUTO NAZIONALE ASSISTENZA CITTADINI</p>
+</header>
+
+<div class="controls" role="region" aria-label="Filtri">
+  <input id="q" class="input" type="search" placeholder="Cerca struttura, esame, indirizzo..." autocomplete="off" aria-label="Cerca">
+  <select id="city" class="input" aria-label="Filtra per città"><option value="">Tutte le città</option></select>
+  <select id="prov" class="input" aria-label="Filtra per provincia"><option value="">Tutte le province</option></select>
+  <select id="natura" class="input" aria-label="Filtra Pubblico/Privato">
+    <option value="">Tutte le tipologie</option>
+    <option value="Pubblico">Pubblico</option>
+    <option value="Privato accreditato">Privato accreditato</option>
+    <option value="Privato">Privato</option>
+  </select>
+  <button id="reset" class="btn" type="button">Reset</button>
+  <button id="print" class="btn" type="button" onclick="window.print()">Stampa / Salva PDF</button>
+  <span id="count" class="count"></span>
+</div>
+
+<div class="controls" id="tagbox" style="padding-top:0"></div>
+<div id="err" class="err"></div>
+
+<div class="table-wrap">
+<table id="tbl">
+  <thead><tr>
+    <th data-key="citta">Città</th>
+    <th data-key="struttura">Struttura</th>
+    <th data-key="servizi">Esami / Servizi</th>
+    <th data-key="indirizzo">Indirizzo</th>
+    <th>Telefono / CUP</th>
+    <th>Esami mirati / Note</th>
+  </tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+</div>
+
+<script>
+// Dataset (ES5 friendly)
+var DATA = [
+// --- Pisa / Pontedera / Empoli ---
+  {"citta":"Pontedera","struttura":"Studio Dr. Figliucci (eco con Dr. A. Paolicchi)","servizi":"Ecografie muscolo-tendinee","indirizzo":"Piazzetta del Gelso 5, Pontedera (PI)","tel":"0587 290974","note":"Mirati (EMG/HRCT/FeNO/Patch test) non in sede."},
+  {"citta":"Pontedera","struttura":"Pubblica Assistenza di Pontedera","servizi":"RMN, RX, Ecografie","indirizzo":"Via Profeti 10, Pontedera (PI)","tel":"0587 291122","note":"Esami mirati non in sede."},
+  {"citta":"Empoli","struttura":"Ecomedica Empoli","servizi":"Diagnostica, Elettromiografia","indirizzo":"Via Luigi Cherubini 2, Empoli (FI)","tel":"0571 99281","note":"EMG arti sup./inf.: prenotazione diretta."},
+  {"citta":"San Miniato","struttura":"Centro SIRIO","servizi":"Elettromiografia","indirizzo":"Via Francesco Guerrazzi 102, San Miniato (PI)","tel":"0571 43264","note":"EMG: prenotazione diretta."},
+  {"citta":"Pisa","struttura":"AOU Pisa — Cisanello (AOUP)","servizi":"Radiologia (RX/RM/TC), Pneumologia, ORL, Neurofisiopatologia (EMG), Dermatologia","indirizzo":"Via Paradisa 2, 56124 Pisa (PI)","tel":"Centralino 050 992111 · CUP 050 995995 · N.V. 800 015877","note":"Mirati: EMG; HRCT; FeNO/Patch test su indicazione."},
+  {"citta":"Pontedera","struttura":"Ospedale 'Felice Lotti' (USL Toscana Nord Ovest)","servizi":"Radiologia, ORL, Pneumologia, Ambulatori","indirizzo":"Via Roma 147, 56025 Pontedera (PI)","tel":"Centralino 0587 273111 · CUP Area Nord Ovest 0585 498498","note":"HRCT/EMG: spesso riferimento aziendale (AOUP Pisa/Empoli)."},
+  {"citta":"Empoli","struttura":"Ospedale 'San Giuseppe' (USL Toscana Centro)","servizi":"Radiologia, ORL, Pneumologia, Dermatologia","indirizzo":"Viale G. Boccaccio 16, 50053 Empoli (FI)","tel":"Centralino 0571 7051 · CUP 055 545454","note":"HRCT/FeNO: verificare; Patch test in Dermatologia (su indicazione)."},
+  {"citta":"San Giuliano Terme","struttura":"Centro Medico Le Logge","servizi":"Poliambulatorio / Diagnostica","indirizzo":"Via Rosa Luxemburg 24/G, 56017 San Giuliano Terme (PI)","tel":"050 6152118","note":"Prenotazione diretta; verificare esami specifici."},
+  {"citta":"Cascina","struttura":"Amplifon — Piazza dei Caduti per la Libertà","servizi":"Valutazione uditiva / ausili acustici","indirizzo":"Piazza dei Caduti per la Libertà 6, 56021 Cascina (PI)","tel":"050 700284 · 800 046 385","note":"Per diagnostica ORL SSN → ORL ospedaliera."},
+  {"citta":"Pisa","struttura":"Prof. Carmelo Chisari (AOUP — intramoenia)","servizi":"Elettromiografia (Neurofisiopatologia)","indirizzo":"AOUP Pisa — Cisanello, Via Paradisa 2","tel":"050 995272","note":"Intramoenia; verificare disponibilità."},
+  {"citta":"Pisa / Casciana Terme","struttura":"Dott.ssa Manuela Scaramuzzino (ORL)","servizi":"Valutazioni ORL (audiometria/impedenzometria)","indirizzo":"Pisa — Via Cisanello 1/A; Casciana Terme — Piazza Garibaldi 9","tel":"—","note":"Prenotazione tramite portali/struttura."},
+  {"citta":"Pontedera","struttura":"Dott.ssa Maddalena Belladonna (Geriatria — intramoenia)","servizi":"Valutazione geriatrica / scale","indirizzo":"Ospedale 'Felice Lotti', Via Roma 147","tel":"0587 273111 (LP intramoenia)","note":"Prenotazione intramoenia USL Nord Ovest."},
+
+  // --- Pistoia / Valdinievole ---
+  {"citta":"Pistoia","struttura":"Ospedale San Jacopo (USL Toscana Centro)","servizi":"Radiologia (RX/RM/TC), Pneumologia, ORL, Neurologia/Neurofisiopatologia (EMG), Dermatologia","indirizzo":"Via Ciliegiole 97, 51100 Pistoia (PT)","tel":"Centralino 0573 3521 · ORL 0573 351033/034/035 · CUP 055 545454","note":"Accesso tramite CUP aziendale; per servizi mirati verificare disponibilità."},
+  {"citta":"Pescia","struttura":"Ospedale SS. Cosma e Damiano (USL Toscana Centro)","servizi":"Radiologia, ORL, Pneumologia, Dermatologia","indirizzo":"Via Cesare Battisti 2, 51017 Pescia (PT)","tel":"CUP 055 545454 · Info 0572 4601 / 848 800709","note":"Prestazioni ambulatoriali prenotabili tramite CUP aziendale."},
+  {"citta":"Montecatini Terme","struttura":"Santa Rita Hospital (GVM)","servizi":"Diagnostica per immagini (RX/RM/TC), Neurologia (EMG/Potenziali Evocati), Ambulatori","indirizzo":"Piazza Cesare Battisti 9, 51016 Montecatini Terme (PT)","tel":"0572 92821","note":"Privato accreditato; prenotazioni ambulatoriali via centralino."},
+  {"citta":"Agliana","struttura":"Centro Medico San Jacopo","servizi":"RM aperta, Ecografie, RX, ORL, Pneumologia, Specialistica","indirizzo":"Via Enrico Berlinguer 6–6/A, 51031 Agliana (PT)","tel":"0574 022424","note":"Prenotazioni online disponibili sul sito."},
+  {"citta":"Pistoia","struttura":"Istituto Diagnostico Pistoiese (IDP)","servizi":"Diagnostica (RX/TC/RM) ed ecografie","indirizzo":"Via Pratese 136, 51100 Pistoia (PT)","tel":"0573 532436 · 0573 939450 · 0573 532440","note":"Verificare disponibilità esami mirati."},
+  {"citta":"Pistoia","struttura":"Casa di Cura San Paolo","servizi":"Diagnostica, ambulatori e chirurgia polispecialistica","indirizzo":"Via Bonellina 199, 51100 Pistoia (PT)","tel":"0573 380481 · 0573 381518","note":"Prenotazioni anche via portale; orari segreterie sul sito."},
+
+  // --- Arezzo (NUOVO) ---
+  {"citta":"Arezzo","struttura":"Ospedale San Donato (USL Toscana Sud Est)","servizi":"Radiologia (RX/RM/TC), ORL, Pneumologia, Neurologia/Neurofisiopatologia (EMG), Dermatologia","indirizzo":"Via Pietro Nenni 20, 52100 Arezzo (AR)","tel":"Centralino 0575 2551 · CUP 800 575 800 / 0575 379100","note":"CUP USL TSE; per esami mirati verificare le UO."},
+  {"citta":"Montevarchi","struttura":"Ospedale Valdarno 'La Gruccia' (USL Toscana Sud Est)","servizi":"Radiologia, Ambulatori specialistici","indirizzo":"Piazza del Volontariato 2, 52025 Montevarchi (AR)","tel":"Centralino 055 91061 · CUP 800 575 800","note":"Prenotazioni tramite CUP aziendale; sportello dedicato."},
+  {"citta":"Bibbiena","struttura":"Ospedale del Casentino (USL Toscana Sud Est)","servizi":"Radiologia, Ambulatori specialistici","indirizzo":"Via Filippo Turati 55, 52011 Bibbiena (AR)","tel":"Centralino 0575 5681 · CUP 800 575 800","note":"Prestazioni ambulatoriali via CUP."},
+  {"citta":"Sansepolcro","struttura":"Ospedale della Valtiberina (USL Toscana Sud Est)","servizi":"Radiologia, Ambulatori specialistici","indirizzo":"Viale A. Fanfani 101, 52037 Sansepolcro (AR)","tel":"Centralino 0575 7571 · CUP 800 575 800","note":"Sportelli CUP di zona attivi."},
+  {"citta":"Arezzo","struttura":"San Giuseppe Hospital (Korian)","servizi":"Poliambulatorio, diagnostica per immagini, ricoveri","indirizzo":"Via Alexander Fleming 1, 52100 Arezzo (AR)","tel":"0575 37341 · Ricoveri 0575 3734456/46652","note":"Privato accreditato; anche solvenza/assicurazioni."},
+  {"citta":"Arezzo","struttura":"Centro Chirurgico Toscano (CCT)","servizi":"Diagnostica per immagini (RX/TC/RM), ambulatori e chirurgia","indirizzo":"Via dei Lecci 22, 52100 Arezzo (AR)","tel":"0575 3335","note":"Prenotazioni dirette."},
+  {"citta":"Arezzo","struttura":"Istituto Radiologico Fiumicelli","servizi":"Radiologia, Ecografia, RM articolare aperta, MOC","indirizzo":"Via Margaritone 51, 52100 Arezzo (AR)","tel":"0575 536423","note":"Sede anche a Bibbiena (Via Rignano 5)."},
+  {"citta":"Arezzo","struttura":"SYNLAB Med — Poliambulatorio/Punto Prelievi","servizi":"Laboratorio analisi, specialistica","indirizzo":"Via Francesco Crispi 13, 52100 Arezzo (AR)","tel":"0575 403734","note":"Punto prelievi e poliambulatorio."},
+  {"citta":"Cortona (Camucia)","struttura":"Centro Diagnostica Avanzata (CDA)","servizi":"Diagnostica per immagini (RX/eco/RM), specialistica","indirizzo":"Via Aldo Capitini 8, 52044 Camucia di Cortona (AR)","tel":"0575 605054","note":"Prenotazioni dirette."},
+  {"citta":"Foiano della Chiana","struttura":"Centro Diagnostico Valdichiana","servizi":"Diagnostica per immagini e servizi ambulatoriali","indirizzo":"Via delle Farniole 24, 52045 Foiano della Chiana (AR)","tel":"0575 641106","note":"Prenotazioni dirette."},
+  {"citta":"Terontola di Cortona","struttura":"Istituto Andrea Cesalpino (Alliance Medical)","servizi":"RX, TC, RM, ecografie","indirizzo":"SR71, 67, 52044 Terontola di Cortona (AR)","tel":"0575 678083","note":"Alcuni RX con accesso diretto."},
+  // --- Siena e provincia (NUOVO) ---
+  {"citta": "Siena", "struttura": "AOU Senese — Ospedale Santa Maria alle Scotte (AOUS)", "servizi": "Radiologia (RX/TC/RM); Pneumologia; Otorinolaringoiatria; Neurologia/EMG; Punto Prelievi Unico (PPU)", "indirizzo": "Viale Mario Bracci 16, 53100 Siena", "tel": "Centralino 0577 585111 · CUP 0577 767676", "note": "Radiologia: CUP di reparto 0577 585650; Accoglienza 0577 585689."},
+  {"citta": "Poggibonsi", "struttura": "Ospedale Alta Val d'Elsa — Campostaggia (USL TSE)", "servizi": "Radiologia; Pronto soccorso; Ambulatori specialistici", "indirizzo": "Località Campostaggia 8, 53036 Poggibonsi (SI)", "tel": "0577 994111 · CUP 0577 767676", "note": "RX/eco in sede; TC/RM su indicazione e disponibilità aziendale."},
+  {"citta": "Montepulciano", "struttura": "Ospedali Riuniti della Valdichiana Senese — Nottola (USL TSE)", "servizi": "Radiologia; Ambulatori specialistici; Laboratorio", "indirizzo": "Località Nottola, Via Provinciale 5 – 53045 Montepulciano (SI)", "tel": "0578 713111 · CUP 0577 767676", "note": "Radiologia e servizi ambulatoriali in sede."},
+  {"citta": "Abbadia San Salvatore", "struttura": "Ospedale Amiata Val d'Orcia (USL TSE)", "servizi": "Radiologia (RX, eco, mammografia, TC); Ambulatori; Cardiologia", "indirizzo": "Via Bolzano, 53021 Abbadia San Salvatore (SI)", "tel": "Centralino 0577 7821 · Radiologia 0577 782248 · CUP 0577 767676", "note": "Prestazioni radiologiche e senologiche attive; prenotazioni tramite CUP."},
+  {"citta": "Monteriggioni", "struttura": "Rugani Hospital (privato accreditato)", "servizi": "Diagnostica per immagini (RX/TC/RM/Ecografia); Otorinolaringoiatria (visite e chirurgia); Poliambulatorio specialistico", "indirizzo": "SR 222 Chiantigiana – Località Colombaio, 53035 Monteriggioni (SI)", "tel": "0577 578311", "note": "Prestazioni SSN in convenzione prenotabili via CUP 0577 767676; visite/diagnostica anche in solvenza."},
+  {"citta": "Siena", "struttura": "NeoMedica Siena (poliambulatorio con diagnostica)", "servizi": "Diagnostica per immagini (RM 1,5T; TC; RX; Ecografia); Neurologia con EMG/ENG; Otorinolaringoiatria con audiometria; Dermatologia", "indirizzo": "Strada Statale 73 Levante 14, 53100 Siena", "tel": "0577 286622", "note": "Prenotazioni 0577 286622; RM 1,5T e TAC di ultima generazione."}
+
+
+  // --- Centri privati aggiuntivi: Siena e provincia ---
+  
+
+
+  // --- Centri diagnostici (no prelievi) — aggiornamento ---
+  {"citta": "Siena", "struttura": "Centro Fisiomedical Check Up (MUST)", "servizi": "Otorinolaringoiatria con audiometria/impedenzometria; Dermatologia; Ecografia/diagnostica per immagini", "indirizzo": "Via Sandro Pertini 7, 53100 Siena", "tel": "0577 40744", "note": "Prenotazioni anche online; poliambulatorio del Gruppo MUST."}
+
+
+  // --- Specialisti / Intramoenia (Siena e provincia) ---
+  {"citta": "Siena", "struttura": "AOUS — Libera Professione (ALP) ORL", "servizi": "Visita ORL; Esame audiometrico; Impedenzometria; Endoscopia nasale (secondo indicazione)", "indirizzo": "Policlinico S. Maria alle Scotte, Viale Mario Bracci 16, 53100 Siena", "tel": "ALP 0577 585234", "note": "Prenotazioni intramoenia AOUS; scegli lo specialista dal portale ALP."},
+  {"citta": "Siena", "struttura": "AOUS — Dermatologia (SSN + ALP)", "servizi": "Dermatologia generale; chirurgica; prevenzione melanoma; crioterapia; LP intramoenia dermatologica", "indirizzo": "Policlinico S. Maria alle Scotte, Viale Mario Bracci 16, 53100 Siena", "tel": "Segreteria 0577 585420 · CUP 0577 767676 · ALP 0577 585234", "note": "Ambulatori SSN prenotabili via CUP; per intramoenia usare ALP."},
+  {"citta": "Siena", "struttura": "AOUS — Centro Malattie Neuromuscolari (EMG)", "servizi": "EMG/ENG; Day Service/Day Hospital; presa in carico malattie neuromuscolari", "indirizzo": "Policlinico S. Maria alle Scotte, Viale Mario Bracci 16, 53100 Siena", "tel": "Centralino 0577 585111", "note": "4 turni ambulatoriali settimanali dedicati all’EMG."},
+  {"citta": "Poggibonsi", "struttura": "USL TSE — Intramoenia ORL (Palazzina Intramoenia Campostaggia)", "servizi": "Visita ORL intramoenia; prestazioni audiologiche; controlli", "indirizzo": "Ospedale Alta Val d’Elsa, Palazzina Intramoenia, Loc. Campostaggia, 53036 Poggibonsi (SI)", "tel": "ALPI USL TSE (vedi portale)", "note": "Esempi specialisti: dr. Leopoldo Brindisi; dr. Giovanni Monciatti (verifica disponibilità)."},
+  {"citta": "Montepulciano", "struttura": "USL TSE — Intramoenia ORL (Area Valdichiana Senese)", "servizi": "Visita ORL intramoenia; impedenzometria; controlli", "indirizzo": "Ospedale Nottola, 53045 Montepulciano (SI)", "tel": "ALPI USL TSE (vedi portale)", "note": "Esempio specialista: dott.ssa Annalisa Panarese (verifica disponibilità)."}
+
+
+  // --- Specialisti / Intramoenia (altre province) ---
+  {"citta": "Pisa", "struttura": "AOUP — CUP Libera Professione (Cisanello)", "servizi": "Prenotazioni intramoenia per tutte le specialità; per ORL/audiologia, Dermatologia, Neurologia (EMG) usare CUP LP", "indirizzo": "Edificio 29, Piano Terra — Stabilimento Cisanello, Via Paradisa, Pisa", "tel": "050 995272", "note": "Sportello Accettazione Cisanello attivo; intramoenia con scelta dello specialista."},
+  {"citta": "Empoli", "struttura": "USL Toscana Centro — Libera Professione (Empoli)", "servizi": "Segreterie intramoenia per prenotazioni specialistiche (ORL, Dermatologia, ecc.)", "indirizzo": "Ospedale San Giuseppe, Viale Boccaccio 16 — e Distretto via Rozzalupi 57, Empoli", "tel": "—", "note": "Prenotazione diretta presso le segreterie LP (orari: Ospedale lun–ven 8–20, sab 8–13; Distretto lun–ven 14–20)."},
+  {"citta": "Pistoia", "struttura": "USL Toscana Centro — ORL Ambulatori (San Jacopo)", "servizi": "Ambulatori ORL; recapiti utili per visite e attività ambulatoriali; verifica disponibilità LP", "indirizzo": "Ospedale San Jacopo, Via Ciliegiole 97, 51100 Pistoia", "tel": "0573 351033 · 0573 351034 · 0573 351035", "note": "Contatti ambulatori; per libera professione fare riferimento alle segreterie LP aziendali."},
+  {"citta": "Arezzo", "struttura": "USL Toscana Sud Est — Libera Professione (San Donato)", "servizi": "Ufficio Libera Professione; prenotazioni intramoenia per ORL, Dermatologia, ecc.", "indirizzo": "Ospedale San Donato, Via Pietro Nenni 20, 52100 Arezzo (scala 4)", "tel": "0575 379122", "note": "Segreteria e Ambulatori LP; seguire istruzioni sul portale USL TSE."}
+
+
+  // --- Specialisti / Territorio / Intramoenia — estensione Toscana ---
+  {"citta": "Pisa", "struttura": "AOUP Cisanello — Ambulatori ORL (SSN)", "servizi": "Visita ORL; Audiometria; Impedenzometria; Endoscopia nasale (secondo indicazione)", "indirizzo": "Stabilimento Cisanello, Via Paradisa, Pisa", "tel": "CUP AOUP", "note": "Prenotazioni tramite CUP ospedaliero; per intramoenia usare CUP Libera Professione AOUP."},
+  {"citta": "Pisa", "struttura": "AOUP Cisanello — Dermatologia (SSN)", "servizi": "Visita dermatologica; chirurgia dermatologica minore; crioterapia; prevenzione melanoma", "indirizzo": "Stabilimento Cisanello, Via Paradisa, Pisa", "tel": "CUP AOUP", "note": "Ambulatori dermatologici ospedalieri; intramoenia tramite CUP LP AOUP."},
+  {"citta": "Pisa", "struttura": "AOUP Cisanello — Neurologia (EMG/ENG)", "servizi": "EMG/ENG; valutazione neuromuscolare; presa in carico specialistica", "indirizzo": "Stabilimento Cisanello, Via Paradisa, Pisa", "tel": "CUP AOUP", "note": "Prestazioni EMG in regime SSN (su indicazione)."},
+  {"citta": "Pisa", "struttura": "USL Toscana Nord Ovest — ORL Territoriale (Pisa)", "servizi": "Visita ORL territoriale; controlli; percorsi audiologici di base", "indirizzo": "Sedi distrettuali della Zona Pisana", "tel": "CUP USL TNO", "note": "Prenotazioni tramite CUP territoriale."},
+  {"citta": "Empoli", "struttura": "USL Toscana Centro — ORL Ambulatori (Ospedale San Giuseppe)", "servizi": "Visita ORL; Audiometria; Impedenzometria", "indirizzo": "Viale G. Boccaccio 16, 50053 Empoli (FI)", "tel": "CUP USL TC", "note": "Per intramoenia fare riferimento alle Segreterie Libera Professione USL TC."},
+  {"citta": "Empoli", "struttura": "USL Toscana Centro — Dermatologia (Ospedale San Giuseppe)", "servizi": "Visita dermatologica; piccoli interventi; crioterapia", "indirizzo": "Viale G. Boccaccio 16, 50053 Empoli (FI)", "tel": "CUP USL TC", "note": "Ambulatori SSN; intramoenia tramite Segreterie LP."},
+  {"citta": "Empoli", "struttura": "USL Toscana Centro — Neurologia (EMG)", "servizi": "EMG/ENG; valutazione neuromuscolare", "indirizzo": "Ospedale San Giuseppe, Empoli", "tel": "CUP USL TC", "note": "Prestazioni EMG in regime SSN su indicazione specialistica."},
+  {"citta": "Pistoia", "struttura": "USL Toscana Centro — ORL Ambulatori (Ospedale San Jacopo)", "servizi": "Visita ORL; Audiometria; Impedenzometria", "indirizzo": "Via Ciliegiole 97, 51100 Pistoia", "tel": "CUP USL TC", "note": "Controllare disponibilità intramoenia presso segreterie LP aziendali."},
+  {"citta": "Pistoia", "struttura": "USL Toscana Centro — Dermatologia (San Jacopo)", "servizi": "Visita dermatologica; chirurgia dermatologica minore; crioterapia", "indirizzo": "Via Ciliegiole 97, 51100 Pistoia", "tel": "CUP USL TC", "note": "Accesso con prenotazione CUP; LP disponibile dove attiva."},
+  {"citta": "Pistoia", "struttura": "USL Toscana Centro — Neurologia (EMG)", "servizi": "EMG/ENG; valutazione neuromuscolare", "indirizzo": "Ospedale San Jacopo, Pistoia", "tel": "CUP USL TC", "note": "Prestazioni SSN su indicazione."},
+  {"citta": "Arezzo", "struttura": "USL Toscana Sud Est — ORL Ambulatori (San Donato)", "servizi": "Visita ORL; Audiometria; Impedenzometria", "indirizzo": "Via Pietro Nenni 20, 52100 Arezzo", "tel": "CUP USL TSE", "note": "Ambulatori SSN; intramoenia tramite Ufficio Libera Professione."},
+  {"citta": "Arezzo", "struttura": "USL Toscana Sud Est — Dermatologia (San Donato)", "servizi": "Visita dermatologica; piccoli interventi; crioterapia", "indirizzo": "Via Pietro Nenni 20, 52100 Arezzo", "tel": "CUP USL TSE", "note": "Ambulatori SSN; LP presso segreterie USL TSE dove attiva."},
+  {"citta": "Arezzo", "struttura": "USL Toscana Sud Est — Neurologia (EMG)", "servizi": "EMG/ENG; valutazione neuromuscolare", "indirizzo": "Ospedale San Donato, Arezzo", "tel": "CUP USL TSE", "note": "Prestazioni EMG in regime SSN su indicazione."},
+  {"citta": "Poggibonsi", "struttura": "USL Toscana Sud Est — ORL Ambulatori (Campostaggia)", "servizi": "Visita ORL; Audiometria; Impedenzometria", "indirizzo": "Ospedale Alta Val d’Elsa, Loc. Campostaggia, 53036 Poggibonsi (SI)", "tel": "CUP USL TSE", "note": "Ambulatori SSN; per LP utilizzare palazzina Intramoenia (dove attiva)."},
+  {"citta": "Montepulciano", "struttura": "USL Toscana Sud Est — ORL Ambulatori (Nottola)", "servizi": "Visita ORL; Audiometria; Impedenzometria", "indirizzo": "Ospedali Riuniti Valdichiana Senese, Loc. Nottola, Montepulciano", "tel": "CUP USL TSE", "note": "Ambulatori SSN; LP tramite segreterie ALPI USL TSE."}
+];
+
+// Compute meta
+var CITY_TO_PROV = {{"Pisa":"Pisa","Pontedera":"Pisa","Cascina":"Pisa","San Giuliano Terme":"Pisa","San Miniato":"Pisa","Volterra":"Pisa",
+"Empoli":"Firenze","Firenze":"Firenze",
+"Pistoia":"Pistoia","Pescia":"Pistoia","Montecatini Terme":"Pistoia","Agliana":"Pistoia",
+"Arezzo":"Arezzo","San Giovanni Valdarno":"Arezzo","Montevarchi":"Arezzo","Camucia di Cortona":"Arezzo",
+"Siena":"Siena","Monteriggioni":"Siena","Poggibonsi":"Siena","Colle di Val d'Elsa":"Siena","Montepulciano":"Siena","Abbadia San Salvatore":"Siena","Sovicille (San Rocco a Pilli)":"Siena"}};
+function computeTags(r){
+  var s = (r.servizi||'') + ' ' + (r.struttura||'');
+  s = s.toLowerCase();
+  var tags = [];
+  if(/rm|risonanza|\btc\b|\btac\b|\brx\b|radiologia|ecografia|diagnostica per immagini/.test(s)) tags.push('Imaging');
+  if(/\bemg\b|elettromiografia|\beng\b/.test(s)) tags.push('EMG/ENG');
+  if(/otorino|\borl\b|audiometr/.test(s)) tags.push('ORL/Audiometria');
+  if(/dermatolog/.test(s)) tags.push('Dermatologia');
+  if(/neurolog/.test(s)) tags.push('Neurologia');
+  if(/oculistic/.test(s)) tags.push('Oculistica');
+  var isPub = /(\baou\b|\bao\s|ospedale|\busl\b|azienda ospedal|policlinico|ssn)/.test(s);
+  var isAccr = /(accreditat)/.test(s);
+  var natura = isPub ? 'Pubblico' : (isAccr ? 'Privato accreditato' : 'Privato');
+  var modalita = (/intramoenia|\balp\b|\balpi\b/.test(s) || /libera professione/.test(s)) ? 'Intramoenia' : 'Istituzionale/Privato';
+  var prov = CITY_TO_PROV[r.citta] || '';
+  r.tags = (r.tags||[]).concat(tags);
+  if(prov) r.tags.push('Provincia: '+prov);
+  r.natura = r.natura || natura;
+  r.modalita = r.modalita || modalita;
+  r.provincia = r.provincia || prov;
+}
+for(var i=0;i<DATA.length;i++) computeTags(DATA[i]);
+
+function buildCityOptions(){
+  var sel = document.getElementById('city');
+  var cities = {{}};
+  for(var i=0;i<DATA.length;i++) cities[DATA[i].citta]=true;
+  var html = '<option value="">Tutte le città</option>';
+  var list = Object.keys(cities).sort();
+  for(var j=0;j<list.length;j++) html += '<option>'+list[j]+'</option>';
+  sel.innerHTML = html;
+}
+function buildProvOptions(){
+  var sel = document.getElementById('prov');
+  var prov = {{}};
+  for(var i=0;i<DATA.length;i++) if(DATA[i].provincia) prov[DATA[i].provincia]=true;
+  var html = '<option value="">Tutte le province</option>';
+  var list = Object.keys(prov).sort();
+  for(var j=0;j<list.length;j++) html += '<option>'+list[j]+'</option>';
+  sel.innerHTML = html;
+}
+function buildTagBox(){
+  var box = document.getElementById('tagbox');
+  var tags = {{}};
+  for(var i=0;i<DATA.length;i++){
+    var t = DATA[i].tags||[];
+    for(var k=0;k<t.length;k++){
+      if(t[k].indexOf('Provincia: ')===0) continue;
+      tags[t[k]] = true;
+    }
+  }
+  var list = Object.keys(tags).sort();
+  var html = '<span class="note">Etichette:</span>';
+  for(var j=0;j<list.length;j++){
+    html += '<label class="chip"><input type="checkbox" value="'+list[j]+'"> '+list[j]+'</label>';
+  }
+  box.innerHTML = html;
+}
+
+var sortKey = 'citta', sortDir = 1;
+function sortRows(arr){
+  return arr.sort(function(a,b){
+    var va = (a[sortKey]||'').toString().toLowerCase();
+    var vb = (b[sortKey]||'').toString().toLowerCase();
+    if(va<vb) return -1*sortDir; if(va>vb) return 1*sortDir; return 0;
+  });
+}
+
+function telLink(text){
+  if(!text) return '';
+  var parts = (''+text).split(/·|;|,|\||\s{2,}/);
+  var out = [];
+  for(var i=0;i<parts.length;i++){
+    var p = (parts[i]||'').trim();
+    if(p) out.push(p);
+  }
+  return out.join(' · ');
+}
+
+function render(){
+  try {{ document.getElementById('err').style.display='none'; }} catch(e) {{}}
+  var q = document.getElementById('q').value;
+  var city = document.getElementById('city').value;
+  var prov = document.getElementById('prov').value;
+  var natura = document.getElementById('natura').value;
+  var chosen = [];
+  var checks = document.querySelectorAll('#tagbox input[type=checkbox]:checked');
+  for(var i=0;i<checks.length;i++) chosen.push(checks[i].value);
+
+  var rows = [];
+  for(var i=0;i<DATA.length;i++){
+    var r = DATA[i];
+    if(city && r.citta!==city) continue;
+    if(prov && r.provincia!==prov) continue;
+    if(natura && r.natura!==natura) continue;
+    if(q){
+      var text = (r.citta+' '+r.struttura+' '+(r.servizi||'')+' '+(r.indirizzo||'')+' '+(r.tel||'')+' '+(r.note||'')).toLowerCase();
+      if(text.indexOf(q.toLowerCase())===-1) continue;
+    }
+    if(chosen.length){
+      var okTags = true;
+      var tg = r.tags||[];
+      for(var t=0;t<chosen.length;t++){ if(tg.indexOf(chosen[t])===-1) {{ okTags=false; break; }} }
+      if(!okTags) continue;
+    }
+    rows.push(r);
+  }
+  sortRows(rows);
+  var tbody = document.getElementById('rows');
+  var html = '';
+  for(var i=0;i<rows.length;i++){
+    var r = rows[i];
+    html += '<tr>' +
+            '<td>'+ (r.citta||'') +'</td>' +
+            '<td><strong>'+ (r.struttura||'') +'</strong></td>' +
+            '<td>'+ (r.servizi||'') +'</td>' +
+            '<td>'+ (r.indirizzo||'') +'</td>' +
+            '<td>'+ (telLink(r.tel)||'') + (r.tel&&r.tel.indexOf('CUP')>=0 ? ' <span class="badge">CUP</span>' : '') +'</td>' +
+            '<td>'+ (r.note||'') +'</td>' +
+            '</tr>';
+  }
+  tbody.innerHTML = html || '<tr><td colspan="6" class="note">Nessun risultato con i filtri correnti.</td></tr>';
+  document.getElementById('count').textContent = rows.length + ' risultati';
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  buildCityOptions(); buildProvOptions(); buildTagBox(); render();
+  document.getElementById('q').addEventListener('input', function(){ render(); });
+  document.getElementById('city').addEventListener('change', render);
+  document.getElementById('prov').addEventListener('change', render);
+  document.getElementById('natura').addEventListener('change', render);
+  document.getElementById('reset').addEventListener('click', function(){
+    document.getElementById('q').value='';
+    document.getElementById('city').value='';
+    document.getElementById('prov').value='';
+    document.getElementById('natura').value='';
+    var checks = document.querySelectorAll('#tagbox input[type=checkbox]'); for(var i=0;i<checks.length;i++) checks[i].checked=false;
+    render();
+  });
+  // Sorting
+  var ths = document.querySelectorAll('#tbl thead th[data-key]');
+  for(var i=0;i<ths.length;i++){{
+    (function(th){{
+      th.addEventListener('click', function(){{
+        var key = th.getAttribute('data-key');
+        if(sortKey===key) sortDir*=-1; else {{sortKey=key;sortDir=1;}} 
+        render();
+      }});
+    }})(ths[i]);
+  }}
+});
+
+// Global error trap
+window.addEventListener('error', function(e){
+  var box = document.getElementById('err');
+  if(box){ box.style.display='block'; box.textContent = 'Errore script: ' + e.message; }
+});
+</script>
+</body>
+</html>

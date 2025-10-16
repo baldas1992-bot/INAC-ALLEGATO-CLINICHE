@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<title>INAC — Allegato Strutture Esami · Pisa · Pontedera · Empoli · Pistoia · Arezzo — Siena e provincia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Elenco stampabile e filtrabile delle strutture utili per prenotazioni (RX, RM, TC, EMG, ORL, Pneumologia, Dermatologia) in area Pisa · Pontedera · Empoli · Pistoia · Arezzo." />
+<!-- Build: regenerated for GitHub Pages, index.html at project root -->
+<style>
+:root{--accent:#0a7a0a;--accent-600:#065f46;--border:#e5e7eb;--bg:#ffffff;--muted:#6b7280}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;background:#fff}
+.header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--border)}
+.brand h1{font-size:18px;margin:0;color:var(--accent)}
+.brand p{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-600)}
+.controls{display:flex;flex-wrap:wrap;gap:12px;padding:12px 24px;align-items:center}
+.input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;min-width:180px}
+.btn{padding:8px 12px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:8px;font-size:14px;cursor:pointer}
+.btn:hover{background:#f0fdf4}
+.count{margin-left:auto;color:var(--muted);font-size:12px}
+.table-wrap{padding:8px 24px 24px;overflow:auto}
+.table-wrap:focus{outline:2px dashed var(--accent);outline-offset:2px}
+caption{caption-side:bottom;color:var(--muted);font-size:12px;padding:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{position:sticky;top:0;background:var(--accent);color:#fff;text-align:left;padding:10px;font-weight:600;z-index:1;user-select:none}
+thead th.sortable{cursor:pointer}
+thead th.sortable::after{content:"\25B2\25BC";opacity:.35;margin-left:6px;font-size:10px}
+tbody tr{transition:background .15s ease}
+tbody tr:hover{background:#fafafa}
+tbody td{border-bottom:1px solid var(--border);vertical-align:top;padding:10px}
+tbody tr:nth-child(even) td{background:#fcfffc}
+.badge{font-size:12px;color:#065f46;background:#ecfdf5;padding:2px 6px;border-radius:999px}
+.note{color:#6b7280;font-size:12px}
+.footer{padding:16px 24px;color:#6b7280;font-size:12px;border-top:1px solid var(--border);text-align:center}
+mark{background:#fef08a;padding:0 2px;border-radius:2px}
+.addr a,.tel a{white-space:nowrap}
+.util{display:flex;gap:8px;flex-wrap:wrap}
+.util .btn.secondary{border-color:var(--border);color:#374151}
+.util .btn.secondary:hover{background:#f9fafb}
+@media print{ @page{ size:A4 landscape; margin:1.2cm } .controls,.util{display:none !important} thead th{box-shadow:none} tbody tr:hover{background:transparent}} 
+</style>
+</head>
+<body>
+<header class="header" role="banner">
+  <div class="brand">
+    <h1>PATRONATO INAC — Siena e provincia</h1>
+    <p>ISTITUTO NAZIONALE ASSISTENZA CITTADINI</p>
+  </div>
+  <div class="util" aria-hidden="true">
+    <button id="share" class="btn secondary" title="Condividi o copia link con i filtri">Condividi</button>
+    <button id="export" class="btn secondary" title="Esporta i risultati filtrati in CSV">Esporta CSV</button>
+  </div>
+</header>
+
+<div class="controls" role="region" aria-label="Filtri">
+  <input id="q" class="input" type="search" placeholder="Cerca struttura, esame, indirizzo..." autocomplete="off" aria-label="Cerca" />
+  <select id="city" class="input" aria-label="Filtra per città"><option value="">Tutte le città</option></select>
+  <button id="reset" class="btn" type="button" title="Pulisci filtri">Reset</button>
+  <button class="btn" onclick="window.print()" type="button">Stampa / Salva PDF</button>
+  <span class="note">Tip: usa anche <b>Ctrl/Cmd + F</b> per ricerche veloci.</span>
+  <span id="count" class="count" aria-live="polite"></span>
+</div>
+
+<div class="table-wrap" tabindex="0">
+<table id="tbl">
+  <caption>Allegato strutture (Pisa · Pontedera · Empoli · Pistoia · Arezzo). Disponibilità e orari possono variare.</caption>
+  <thead><tr>
+    <th class="sortable" data-key="citta" style="width:12%">Città</th>
+    <th class="sortable" data-key="struttura" style="width:24%">Struttura</th>
+    <th class="sortable" data-key="servizi" style="width:20%">Esami / Servizi</th>
+    <th class="sortable" data-key="indirizzo" style="width:24%">Indirizzo</th>
+    <th style="width:20%">Telefono / CUP</th>
+    <th style="width:18%">Esami mirati / Note</th>
+  </tr></thead>
+  <tbody></tbody>
+</table>
+</div>
+
+<section class="section" style="padding:10px 24px">
+  <h3>Istruzioni rapide per la prenotazione</h3>
+  <ul>
+    <li><b>CUP USL Toscana Centro</b> (Pistoia/Empoli): <b>055 545454</b>.</li>
+    <li><b>CUP USL Toscana Nord Ovest</b> (Pontedera/Pisa): <b>0585 498498</b> · AOUP Pisa <b>050 995995</b>.</li>
+    <li><b>CUP USL Toscana Sud Est</b> (Arezzo/Valdarno/Casentino/Valtiberina): <b>800 575 800</b> (fisso) · <b>0575 379100</b> (mobile).</li>
+    <li><b>Ecografie bilaterali (SSN)</b>: impegnativa del curante <b>distinta per ogni lato</b> (es. polso dx e polso sx).</li>
+  </ul>
+</section>
+
+<footer class="footer" role="contentinfo">
+  Ultimo aggiornamento manuale: <span id="lastup"></span> · Allegato strutture (Pisa · Pontedera · Empoli · Pistoia · Arezzo). Disponibilità e orari possono variare.
+</footer>
+
+<script>
+// ————————————————————————————————————————————
+// Dataset (aggiornabile):
+// ————————————————————————————————————————————
+const DATA = [
+  // --- Pisa / Pontedera / Empoli ---
+  {"citta":"Pontedera","struttura":"Studio Dr. Figliucci (eco con Dr. A. Paolicchi)","servizi":"Ecografie muscolo-tendinee","indirizzo":"Piazzetta del Gelso 5, Pontedera (PI)","tel":"0587 290974","note":"Mirati (EMG/HRCT/FeNO/Patch test) non in sede."},
+  {"citta":"Pontedera","struttura":"Pubblica Assistenza di Pontedera","servizi":"RMN, RX, Ecografie","indirizzo":"Via Profeti 10, Pontedera (PI)","tel":"0587 291122","note":"Esami mirati non in sede."},
+  {"citta":"Empoli","struttura":"Ecomedica Empoli","servizi":"Diagnostica, Elettromiografia","indirizzo":"Via Luigi Cherubini 2, Empoli (FI)","tel":"0571 99281","note":"EMG arti sup./inf.: prenotazione diretta."},
+  {"citta":"San Miniato","struttura":"Centro SIRIO","servizi":"Elettromiografia","indirizzo":"Via Francesco Guerrazzi 102, San Miniato (PI)","tel":"0571 43264","note":"EMG: prenotazione diretta."},
+  {"citta":"Pisa","struttura":"AOU Pisa — Cisanello (AOUP)","servizi":"Radiologia (RX/RM/TC), Pneumologia, ORL, Neurofisiopatologia (EMG), Dermatologia","indirizzo":"Via Paradisa 2, 56124 Pisa (PI)","tel":"Centralino 050 992111 · CUP 050 995995 · N.V. 800 015877","note":"Mirati: EMG; HRCT; FeNO/Patch test su indicazione."},
+  {"citta":"Pontedera","struttura":"Ospedale 'Felice Lotti' (USL Toscana Nord Ovest)","servizi":"Radiologia, ORL, Pneumologia, Ambulatori","indirizzo":"Via Roma 147, 56025 Pontedera (PI)","tel":"Centralino 0587 273111 · CUP Area Nord Ovest 0585 498498","note":"HRCT/EMG: spesso riferimento aziendale (AOUP Pisa/Empoli)."},
+  {"citta":"Empoli","struttura":"Ospedale 'San Giuseppe' (USL Toscana Centro)","servizi":"Radiologia, ORL, Pneumologia, Dermatologia","indirizzo":"Viale G. Boccaccio 16, 50053 Empoli (FI)","tel":"Centralino 0571 7051 · CUP 055 545454","note":"HRCT/FeNO: verificare; Patch test in Dermatologia (su indicazione)."},
+  {"citta":"San Giuliano Terme","struttura":"Centro Medico Le Logge","servizi":"Poliambulatorio / Diagnostica","indirizzo":"Via Rosa Luxemburg 24/G, 56017 San Giuliano Terme (PI)","tel":"050 6152118","note":"Prenotazione diretta; verificare esami specifici."},
+  {"citta":"Cascina","struttura":"Amplifon — Piazza dei Caduti per la Libertà","servizi":"Valutazione uditiva / ausili acustici","indirizzo":"Piazza dei Caduti per la Libertà 6, 56021 Cascina (PI)","tel":"050 700284 · 800 046 385","note":"Per diagnostica ORL SSN → ORL ospedaliera."},
+  {"citta":"Pisa","struttura":"Prof. Carmelo Chisari (AOUP — intramoenia)","servizi":"Elettromiografia (Neurofisiopatologia)","indirizzo":"AOUP Pisa — Cisanello, Via Paradisa 2","tel":"050 995272","note":"Intramoenia; verificare disponibilità."},
+  {"citta":"Pisa / Casciana Terme","struttura":"Dott.ssa Manuela Scaramuzzino (ORL)","servizi":"Valutazioni ORL (audiometria/impedenzometria)","indirizzo":"Pisa — Via Cisanello 1/A; Casciana Terme — Piazza Garibaldi 9","tel":"—","note":"Prenotazione tramite portali/struttura."},
+  {"citta":"Pontedera","struttura":"Dott.ssa Maddalena Belladonna (Geriatria — intramoenia)","servizi":"Valutazione geriatrica / scale","indirizzo":"Ospedale 'Felice Lotti', Via Roma 147","tel":"0587 273111 (LP intramoenia)","note":"Prenotazione intramoenia USL Nord Ovest."},
+
+  // --- Pistoia / Valdinievole ---
+  {"citta":"Pistoia","struttura":"Ospedale San Jacopo (USL Toscana Centro)","servizi":"Radiologia (RX/RM/TC), Pneumologia, ORL, Neurologia/Neurofisiopatologia (EMG), Dermatologia","indirizzo":"Via Ciliegiole 97, 51100 Pistoia (PT)","tel":"Centralino 0573 3521 · ORL 0573 351033/034/035 · CUP 055 545454","note":"Accesso tramite CUP aziendale; per servizi mirati verificare disponibilità."},
+  {"citta":"Pescia","struttura":"Ospedale SS. Cosma e Damiano (USL Toscana Centro)","servizi":"Radiologia, ORL, Pneumologia, Dermatologia","indirizzo":"Via Cesare Battisti 2, 51017 Pescia (PT)","tel":"CUP 055 545454 · Info 0572 4601 / 848 800709","note":"Prestazioni ambulatoriali prenotabili tramite CUP aziendale."},
+  {"citta":"Montecatini Terme","struttura":"Santa Rita Hospital (GVM)","servizi":"Diagnostica per immagini (RX/RM/TC), Neurologia (EMG/Potenziali Evocati), Ambulatori","indirizzo":"Piazza Cesare Battisti 9, 51016 Montecatini Terme (PT)","tel":"0572 92821","note":"Privato accreditato; prenotazioni ambulatoriali via centralino."},
+  {"citta":"Agliana","struttura":"Centro Medico San Jacopo","servizi":"RM aperta, Ecografie, RX, ORL, Pneumologia, Specialistica","indirizzo":"Via Enrico Berlinguer 6–6/A, 51031 Agliana (PT)","tel":"0574 022424","note":"Prenotazioni online disponibili sul sito."},
+  {"citta":"Pistoia","struttura":"Istituto Diagnostico Pistoiese (IDP)","servizi":"Diagnostica (RX/TC/RM) ed ecografie","indirizzo":"Via Pratese 136, 51100 Pistoia (PT)","tel":"0573 532436 · 0573 939450 · 0573 532440","note":"Verificare disponibilità esami mirati."},
+  {"citta":"Pistoia","struttura":"Casa di Cura San Paolo","servizi":"Diagnostica, ambulatori e chirurgia polispecialistica","indirizzo":"Via Bonellina 199, 51100 Pistoia (PT)","tel":"0573 380481 · 0573 381518","note":"Prenotazioni anche via portale; orari segreterie sul sito."},
+
+  // --- Arezzo (NUOVO) ---
+  {"citta":"Arezzo","struttura":"Ospedale San Donato (USL Toscana Sud Est)","servizi":"Radiologia (RX/RM/TC), ORL, Pneumologia, Neurologia/Neurofisiopatologia (EMG), Dermatologia","indirizzo":"Via Pietro Nenni 20, 52100 Arezzo (AR)","tel":"Centralino 0575 2551 · CUP 800 575 800 / 0575 379100","note":"CUP USL TSE; per esami mirati verificare le UO."},
+  {"citta":"Montevarchi","struttura":"Ospedale Valdarno 'La Gruccia' (USL Toscana Sud Est)","servizi":"Radiologia, Ambulatori specialistici","indirizzo":"Piazza del Volontariato 2, 52025 Montevarchi (AR)","tel":"Centralino 055 91061 · CUP 800 575 800","note":"Prenotazioni tramite CUP aziendale; sportello dedicato."},
+  {"citta":"Bibbiena","struttura":"Ospedale del Casentino (USL Toscana Sud Est)","servizi":"Radiologia, Ambulatori specialistici","indirizzo":"Via Filippo Turati 55, 52011 Bibbiena (AR)","tel":"Centralino 0575 5681 · CUP 800 575 800","note":"Prestazioni ambulatoriali via CUP."},
+  {"citta":"Sansepolcro","struttura":"Ospedale della Valtiberina (USL Toscana Sud Est)","servizi":"Radiologia, Ambulatori specialistici","indirizzo":"Viale A. Fanfani 101, 52037 Sansepolcro (AR)","tel":"Centralino 0575 7571 · CUP 800 575 800","note":"Sportelli CUP di zona attivi."},
+  {"citta":"Arezzo","struttura":"San Giuseppe Hospital (Korian)","servizi":"Poliambulatorio, diagnostica per immagini, ricoveri","indirizzo":"Via Alexander Fleming 1, 52100 Arezzo (AR)","tel":"0575 37341 · Ricoveri 0575 3734456/46652","note":"Privato accreditato; anche solvenza/assicurazioni."},
+  {"citta":"Arezzo","struttura":"Centro Chirurgico Toscano (CCT)","servizi":"Diagnostica per immagini (RX/TC/RM), ambulatori e chirurgia","indirizzo":"Via dei Lecci 22, 52100 Arezzo (AR)","tel":"0575 3335","note":"Prenotazioni dirette."},
+  {"citta":"Arezzo","struttura":"Istituto Radiologico Fiumicelli","servizi":"Radiologia, Ecografia, RM articolare aperta, MOC","indirizzo":"Via Margaritone 51, 52100 Arezzo (AR)","tel":"0575 536423","note":"Sede anche a Bibbiena (Via Rignano 5)."},
+  {"citta":"Arezzo","struttura":"SYNLAB Med — Poliambulatorio/Punto Prelievi","servizi":"Laboratorio analisi, specialistica","indirizzo":"Via Francesco Crispi 13, 52100 Arezzo (AR)","tel":"0575 403734","note":"Punto prelievi e poliambulatorio."},
+  {"citta":"Cortona (Camucia)","struttura":"Centro Diagnostica Avanzata (CDA)","servizi":"Diagnostica per immagini (RX/eco/RM), specialistica","indirizzo":"Via Aldo Capitini 8, 52044 Camucia di Cortona (AR)","tel":"0575 605054","note":"Prenotazioni dirette."},
+  {"citta":"Foiano della Chiana","struttura":"Centro Diagnostico Valdichiana","servizi":"Diagnostica per immagini e servizi ambulatoriali","indirizzo":"Via delle Farniole 24, 52045 Foiano della Chiana (AR)","tel":"0575 641106","note":"Prenotazioni dirette."},
+  {"citta":"Terontola di Cortona","struttura":"Istituto Andrea Cesalpino (Alliance Medical)","servizi":"RX, TC, RM, ecografie","indirizzo":"SR71, 67, 52044 Terontola di Cortona (AR)","tel":"0575 678083","note":"Alcuni RX con accesso diretto."},
+  // --- Siena e provincia (NUOVO) ---
+  {"citta": "Siena", "struttura": "AOU Senese — Ospedale Santa Maria alle Scotte (AOUS)", "servizi": "Radiologia (RX/TC/RM); Pneumologia; Otorinolaringoiatria; Neurologia/EMG; Punto Prelievi Unico (PPU)", "indirizzo": "Viale Mario Bracci 16, 53100 Siena", "tel": "Centralino 0577 585111 · CUP 0577 767676", "note": "Radiologia: CUP di reparto 0577 585650; Accoglienza 0577 585689."},
+  {"citta": "Poggibonsi", "struttura": "Ospedale Alta Val d'Elsa — Campostaggia (USL TSE)", "servizi": "Radiologia; Pronto soccorso; Ambulatori specialistici", "indirizzo": "Località Campostaggia 8, 53036 Poggibonsi (SI)", "tel": "0577 994111 · CUP 0577 767676", "note": "RX/eco in sede; TC/RM su indicazione e disponibilità aziendale."},
+  {"citta": "Montepulciano", "struttura": "Ospedali Riuniti della Valdichiana Senese — Nottola (USL TSE)", "servizi": "Radiologia; Ambulatori specialistici; Laboratorio", "indirizzo": "Località Nottola, Via Provinciale 5 – 53045 Montepulciano (SI)", "tel": "0578 713111 · CUP 0577 767676", "note": "Radiologia e servizi ambulatoriali in sede."},
+  {"citta": "Abbadia San Salvatore", "struttura": "Ospedale Amiata Val d'Orcia (USL TSE)", "servizi": "Radiologia (RX, eco, mammografia, TC); Ambulatori; Cardiologia", "indirizzo": "Via Bolzano, 53021 Abbadia San Salvatore (SI)", "tel": "Centralino 0577 7821 · Radiologia 0577 782248 · CUP 0577 767676", "note": "Prestazioni radiologiche e senologiche attive; prenotazioni tramite CUP."},
+  {"citta": "Monteriggioni", "struttura": "Rugani Hospital (privato accreditato)", "servizi": "Diagnostica per immagini (RX/TC/RM/Ecografia); Otorinolaringoiatria (visite e chirurgia); Poliambulatorio specialistico", "indirizzo": "SR 222 Chiantigiana – Località Colombaio, 53035 Monteriggioni (SI)", "tel": "0577 578311", "note": "Prestazioni SSN in convenzione prenotabili via CUP 0577 767676; visite/diagnostica anche in solvenza."},
+  {"citta": "Siena", "struttura": "NeoMedica Siena (poliambulatorio con diagnostica)", "servizi": "Diagnostica per immagini (RM 1,5T; TC; RX; Ecografia); Neurologia con EMG/ENG; Otorinolaringoiatria con audiometria; Dermatologia", "indirizzo": "Strada Statale 73 Levante 14, 53100 Siena", "tel": "0577 286622", "note": "Prenotazioni 0577 286622; RM 1,5T e TAC di ultima generazione."}
+
+
+  // --- Centri privati aggiuntivi: Siena e provincia ---
+  
+
+
+  // --- Centri diagnostici (no prelievi) — aggiornamento ---
+  {"citta": "Siena", "struttura": "Centro Fisiomedical Check Up (MUST)", "servizi": "Otorinolaringoiatria con audiometria/impedenzometria; Dermatologia; Ecografia/diagnostica per immagini", "indirizzo": "Via Sandro Pertini 7, 53100 Siena", "tel": "0577 40744", "note": "Prenotazioni anche online; poliambulatorio del Gruppo MUST."}
+
+
+  // --- Specialisti / Intramoenia (Siena e provincia) ---
+  {"citta": "Siena", "struttura": "AOUS — Libera Professione (ALP) ORL", "servizi": "Visita ORL; Esame audiometrico; Impedenzometria; Endoscopia nasale (secondo indicazione)", "indirizzo": "Policlinico S. Maria alle Scotte, Viale Mario Bracci 16, 53100 Siena", "tel": "ALP 0577 585234", "note": "Prenotazioni intramoenia AOUS; scegli lo specialista dal portale ALP."},
+  {"citta": "Siena", "struttura": "AOUS — Dermatologia (SSN + ALP)", "servizi": "Dermatologia generale; chirurgica; prevenzione melanoma; crioterapia; LP intramoenia dermatologica", "indirizzo": "Policlinico S. Maria alle Scotte, Viale Mario Bracci 16, 53100 Siena", "tel": "Segreteria 0577 585420 · CUP 0577 767676 · ALP 0577 585234", "note": "Ambulatori SSN prenotabili via CUP; per intramoenia usare ALP."},
+  {"citta": "Siena", "struttura": "AOUS — Centro Malattie Neuromuscolari (EMG)", "servizi": "EMG/ENG; Day Service/Day Hospital; presa in carico malattie neuromuscolari", "indirizzo": "Policlinico S. Maria alle Scotte, Viale Mario Bracci 16, 53100 Siena", "tel": "Centralino 0577 585111", "note": "4 turni ambulatoriali settimanali dedicati all’EMG."},
+  {"citta": "Poggibonsi", "struttura": "USL TSE — Intramoenia ORL (Palazzina Intramoenia Campostaggia)", "servizi": "Visita ORL intramoenia; prestazioni audiologiche; controlli", "indirizzo": "Ospedale Alta Val d’Elsa, Palazzina Intramoenia, Loc. Campostaggia, 53036 Poggibonsi (SI)", "tel": "ALPI USL TSE (vedi portale)", "note": "Esempi specialisti: dr. Leopoldo Brindisi; dr. Giovanni Monciatti (verifica disponibilità)."},
+  {"citta": "Montepulciano", "struttura": "USL TSE — Intramoenia ORL (Area Valdichiana Senese)", "servizi": "Visita ORL intramoenia; impedenzometria; controlli", "indirizzo": "Ospedale Nottola, 53045 Montepulciano (SI)", "tel": "ALPI USL TSE (vedi portale)", "note": "Esempio specialista: dott.ssa Annalisa Panarese (verifica disponibilità)."}
+
+];
+
+// ————————————————————————————————————————————
+// Utility
+// ————————————————————————————————————————————
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const escapeHtml = s => (''+s).replace(/[&<>"']/g, c => ({'&':'&','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+const toDigits = s => (''+s).replace(/[^0-9+]/g,'');
+
+function telLink(text){
+  if(!text) return '';
+  const parts = (''+text).split(/·|;|,|\||\s{2,}/).map(s=>s.trim()).filter(Boolean);
+  return parts.map(p=>{
+    const dig = toDigits(p);
+    return /\d{5,}/.test(dig) ? `<a href="tel:${dig}">${escapeHtml(p)}</a>` : escapeHtml(p);
+  }).join(' · ');
+}
+
+function mapsLink(addr){
+  if(!addr) return '';
+  const url = `https://www.google.com/maps?q=${encodeURIComponent(addr)}`;
+  return `<a href="${url}" target="_blank" rel="noopener">${escapeHtml(addr)}</a>`;
+}
+
+function splitTerms(q){
+  return (q||'').toLowerCase().trim().split(/\s+/).filter(Boolean);
+}
+
+function highlight(text, q){
+  const s = ''+text; if(!q) return escapeHtml(s);
+  const terms = splitTerms(q); if(!terms.length) return escapeHtml(s);
+  const pattern = new RegExp(terms.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'), 'gi');
+  return escapeHtml(s).replace(pattern, m=>`<mark>${m}</mark>`);
+}
+
+function download(name, text){
+  const blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function toCSV(rows){
+  const headers = ['Città','Struttura','Servizi','Indirizzo','Telefono/CUP','Note'];
+  const esc = v => '"'+((''+(v??'')).replace(/"/g,'""'))+'"';
+  const lines = [headers.map(esc).join(',')];
+  for(const r of rows){
+    lines.push([r.citta, r.struttura, r.servizi, r.indirizzo, r.tel||'', r.note||''].map(esc).join(','));
+  }
+  return lines.join('\n');
+}
+
+// ————————————————————————————————————————————
+// State + rendering
+// ————————————————————————————————————————————
+let sortKey = 'citta';
+let sortDir = 1; // 1 asc, -1 desc
+
+function applySort(arr){
+  return arr.slice().sort((a,b)=>{
+    const va = (''+(a[sortKey]??'')).toLowerCase();
+    const vb = (''+(b[sortKey]??'')).toLowerCase();
+    if(va<vb) return -1*sortDir; if(va>vb) return 1*sortDir; return 0;
+  });
+}
+
+function buildCityOptions(){
+  const sel = $('#city');
+  const current = sel.value;
+  const setCities = new Set(DATA.map(r=>r.citta));
+  sel.innerHTML = '<option value="">Tutte le città</option>' + Array.from(setCities).sort().map(c=>`<option>${c}</option>`).join('');
+  if(current && setCities.has(current)) sel.value = current; // preserva se presente
+}
+
+function getFiltersFromURL(){
+  const p = new URLSearchParams(location.search);
+  return {q:p.get('q')||'', city:p.get('city')||''};
+}
+
+function pushFiltersToURL(q, city){
+  const p = new URLSearchParams();
+  if(q) p.set('q', q);
+  if(city) p.set('city', city);
+  const url = location.pathname + (p.toString()?('?'+p.toString()):'');
+  history.replaceState(null, '', url);
+}
+
+function persistFilters(q, city){
+  try{localStorage.setItem('inac_filters', JSON.stringify({q, city}));}catch{}
+}
+function loadPersistedFilters(){
+  try{const v = JSON.parse(localStorage.getItem('inac_filters')||'{}'); return v||{};}catch{return {}};
+}
+
+function render(){
+  buildCityOptions();
+  const q = $('#q').value.trim();
+  const city = $('#city').value;
+  // filtro base
+  let filtered = DATA.filter(r => (!city || r.citta === city));
+  if(q){
+    const ql = q.toLowerCase();
+    filtered = filtered.filter(r => Object.values(r).some(v => (''+v).toLowerCase().includes(ql)));
+  }
+  filtered = applySort(filtered);
+
+  const tbody = $('#tbl tbody');
+  tbody.innerHTML = '';
+  for(const r of filtered){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${highlight(r.citta, q)}</td>
+      <td><strong>${highlight(r.struttura, q)}</strong></td>
+      <td>${highlight(r.servizi, q)}</td>
+      <td class="addr">${mapsLink(r.indirizzo)}</td>
+      <td class="tel">${telLink(r.tel)}${r.tel && r.tel.includes('CUP') ? ' <span class="badge" title="Centro Unico Prenotazioni">CUP</span>' : ''}</td>
+      <td>${highlight(r.note||'', q)}</td>`;
+    tbody.appendChild(tr);
+  }
+  $('#count').textContent = `${filtered.length} risultato${filtered.length===1?'':'i'}`;
+
+  // URL + storage
+  pushFiltersToURL(q, city);
+  persistFilters(q, city);
+}
+
+function setLastUpdated(){
+  const d = new Date();
+  $('#lastup').textContent = d.toLocaleDateString('it-IT', {year:'numeric', month:'long', day:'2-digit'});
+}
+
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); } }
+
+// ————————————————————————————————————————————
+// Init + Events
+// ————————————————————————————————————————————
+document.addEventListener('DOMContentLoaded', () => {
+  setLastUpdated();
+  const {q, city} = Object.assign({}, loadPersistedFilters(), getFiltersFromURL());
+  if(q) $('#q').value = q;
+  buildCityOptions();
+  if(city) $('#city').value = city;
+  render();
+
+  $('#q').addEventListener('input', debounce(render, 120));
+  $('#city').addEventListener('change', render);
+  $('#reset').addEventListener('click', () => { $('#q').value=''; $('#city').value=''; render(); });
+
+  // ordinamento clic su header
+  $$('#tbl thead th.sortable').forEach(th => th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if(sortKey === key){ sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+    render();
+  }));
+
+  // esportazione CSV
+  $('#export').addEventListener('click', () => {
+    const q = $('#q').value.trim();
+    const city = $('#city').value;
+    let rows = DATA.filter(r => (!city || r.citta===city));
+    if(q){ const ql = q.toLowerCase(); rows = rows.filter(r => Object.values(r).some(v => (''+v).toLowerCase().includes(ql))); }
+    rows = applySort(rows);
+    const csv = toCSV(rows);
+    download('inac_strutture.csv', csv);
+  });
+
+  // share / copia link
+  $('#share').addEventListener('click', async () => {
+    const url = location.href;
+    try{
+      if(navigator.share){ await navigator.share({title:document.title, url}); }
+      else{ await navigator.clipboard.writeText(url); alert('Link copiato negli appunti'); }
+    }catch{ /* utente ha annullato */ }
+  });
+});
+
+// === Estensioni: etichette provincia + tag clinici + filtro pubblico/privato ===
+(function(){
+  const $ = sel => document.querySelector(sel);
+
+  // Mappa città->provincia (copre dataset attuale; estendibile)
+  const CITY_TO_PROV = {
+    "Pisa":"Pisa","Pontedera":"Pisa","Cascina":"Pisa","San Giuliano Terme":"Pisa","San Miniato":"Pisa","Volterra":"Pisa",
+    "Empoli":"Firenze","Firenze":"Firenze",
+    "Pistoia":"Pistoia","Pescia":"Pistoia","Montecatini Terme":"Pistoia","Agliana":"Pistoia",
+    "Arezzo":"Arezzo","San Giovanni Valdarno":"Arezzo","Montevarchi":"Arezzo","Camucia di Cortona":"Arezzo",
+    "Siena":"Siena","Monteriggioni":"Siena","Poggibonsi":"Siena","Colle di Val d'Elsa":"Siena","Montepulciano":"Siena","Abbadia San Salvatore":"Siena","Sovicille (San Rocco a Pilli)":"Siena"
+  };
+
+  function computeTags(r){
+    const s = (r.servizi||'').toLowerCase() + ' ' + (r.struttura||'').toLowerCase();
+    const tags = [];
+    if(/rm|risonanza|\\btc\\b|\\btac\\b|\\brx\\b|radiologia|ecografia|diagnostica per immagini/.test(s)) tags.push('Imaging');
+    if(/\\bemg\\b|elettromiografia|\\beng\\b/.test(s)) tags.push('EMG/ENG');
+    if(/otorino|\\borl\\b|audiometr/.test(s)) tags.push('ORL/Audiometria');
+    if(/dermatolog/.test(s)) tags.push('Dermatologia');
+    if(/neurolog/.test(s)) tags.push('Neurologia');
+    if(/oculistic/.test(s)) tags.push('Oculistica');
+    const isPub = /(\\baou\\b|\\bao\\s|ospedale|\\busl\\b|azienda ospedal|policlinico|ssn)/.test(s);
+    const isAccr = /(accreditat)/.test(s);
+    const natura = isPub ? 'Pubblico' : (isAccr ? 'Privato accreditato' : 'Privato');
+    const modalita = (/intramoenia|\\balp\\b|\\balpi\\b/.test(s) || /libera professione/.test(s)) ? 'Intramoenia' : 'Istituzionale/Privato';
+    const prov = CITY_TO_PROV[r.citta] || '';
+    return {tags, natura, modalita, prov};
+  }
+
+  // Precalcola meta
+  DATA.forEach(r => {
+    const {tags,natura,modalita,prov} = computeTags(r);
+    r.tags = Array.from(new Set([...(r.tags||[]), ...tags, prov?('Provincia: '+prov):null].filter(Boolean)));
+    r.natura = r.natura || natura;
+    r.modalita = r.modalita || modalita;
+    r.provincia = r.provincia || prov;
+  });
+
+  // UI controls
+  const controls = document.querySelector('.controls');
+  if(controls && !$('#prov') ){
+    const provSel = document.createElement('select');
+    provSel.id='prov'; provSel.className='input';
+    provSel.innerHTML = '<option value=\"\">Tutte le province</option>' +
+      Array.from(new Set(DATA.map(r=>r.provincia).filter(Boolean))).sort().map(p=>`<option>${p}</option>`).join('');
+    provSel.setAttribute('aria-label','Filtra per provincia');
+
+    const naturaSel = document.createElement('select');
+    naturaSel.id='natura'; naturaSel.className='input';
+    naturaSel.innerHTML = '<option value=\"\">Tutte le tipologie</option><option>Pubblico</option><option>Privato accreditato</option><option>Privato</option>';
+    naturaSel.setAttribute('aria-label','Filtra Pubblico/Privato');
+
+    const tagsBox = document.createElement('div');
+    tagsBox.id='tagbox'; tagsBox.style.display='flex'; tagsBox.style.flexWrap='wrap'; tagsBox.style.gap='8px'; tagsBox.style.alignItems='center';
+    const allTags = Array.from(new Set(DATA.flatMap(r=>r.tags||[]).filter(t=>!/^Provincia: /.test(t)))).sort();
+    tagsBox.innerHTML = '<span class=\"note\">Etichette:</span>' + allTags.map(t=>`<label class=\"chip\"><input type=\"checkbox\" value=\"${t}\"/> ${t}</label>`).join('');
+
+    const citySel = document.getElementById('city');
+    controls.insertBefore(provSel, citySel.nextSibling);
+    controls.insertBefore(naturaSel, provSel.nextSibling);
+    controls.appendChild(tagsBox);
+  }
+
+  function applyExtraFilters(){
+    const q = (document.getElementById('q')?.value||'').toLowerCase().trim();
+    const city = document.getElementById('city')?.value||'';
+    const prov = document.getElementById('prov')?.value||'';
+    const natura = document.getElementById('natura')?.value||'';
+    const chosenTags = Array.from(document.querySelectorAll('#tagbox input:checked')).map(i=>i.value);
+    const tbody = document.querySelector('#tbl tbody');
+    if(!tbody) return;
+    let shown = 0;
+    for(const tr of Array.from(tbody.querySelectorAll('tr'))){
+      const tds = tr.querySelectorAll('td');
+      if(tds.length < 2){ tr.style.display=''; continue; }
+      const citta = (tds[0].textContent||'').trim();
+      const struttura = (tds[1].textContent||'').trim();
+      const meta = DATA.find(r => (r.struttura||'').trim() === struttura);
+      let ok = true;
+      if(city && citta !== city) ok = false;
+      if(prov && (!meta || meta.provincia !== prov)) ok = false;
+      if(natura && (!meta || meta.natura !== natura)) ok = false;
+      if(chosenTags.length){
+        const tags = (meta?.tags)||[];
+        if(!chosenTags.every(t=>tags.includes(t))) ok = false;
+      }
+      if(q){
+        const rowTxt = tr.textContent.toLowerCase();
+        if(!rowTxt.includes(q)) ok = false;
+      }
+      tr.style.display = ok ? '' : 'none';
+      if(ok) shown++;
+    }
+    const count = document.getElementById('count');
+    if(count) count.textContent = shown + ' risultati';
+  }
+
+  const tbody = document.querySelector('#tbl tbody');
+  if(tbody){
+    const mo = new MutationObserver(()=> applyExtraFilters());
+    mo.observe(tbody, {childList:true});
+  }
+  ['q','city','prov','natura'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', applyExtraFilters);
+    if(el) el.addEventListener('change', applyExtraFilters);
+  });
+  document.addEventListener('change', (e)=>{
+    if(e.target && e.target.closest('#tagbox')) applyExtraFilters();
+  });
+  window.addEventListener('load', applyExtraFilters);
+})();
+
+</script>
+</body>
+</html>
